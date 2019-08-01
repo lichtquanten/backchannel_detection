@@ -1,0 +1,3 @@
+[submodule "feature_extraction/nod_detection"]
+	path = feature_extraction/nod_detection
+	url = https://github.com/MLewkowicz/nod_detection.git

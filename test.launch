@@ -1,0 +1,41 @@
+<launch>
+	<node
+		pkg="central"
+		type="go.py"
+		name="bc"
+		output="screen"
+	/>
+	<node
+		pkg="audio_io"
+		type="capture.py"
+		name="mic"
+		output="screen"
+	/>
+	<node
+		pkg="audio_features"
+		type="features.py"
+		name="audio_features"
+		output="screen"
+	>
+		<param name="audio_topic" value="/mic/data" />
+		<param name="features_topic" value="/bc/audio_features" />
+	</node>
+	<node
+		pkg="audio_features"
+		type="features.py"
+		name="nod_features"
+		output="screen"
+	>
+		<param name="audio_topic" value="/mic/data" />
+		<param name="features_topic" value="/bc/nod_features" />
+	</node>
+	<node
+		pkg="bundler"
+		type="bundle.py"
+		name="bundler"
+		output="screen"
+	>
+		<param name="audio_topic" value="/bc/audio_features" />
+		<param name="nod_topic" value="/bc/nod_features" />
+	</node>
+</launch>

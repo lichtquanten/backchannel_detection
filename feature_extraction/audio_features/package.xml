@@ -1,0 +1,26 @@
+<package format="2">
+  <name>audio_features</name>
+  <version>0.0.0</version>
+  <description>The audio_features package</description>
+  <license>MIT</license>
+
+  <maintainer email="sean@hackett.pw">Sean Hackett</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>message_generation</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <exec_depend>audio_io_msgs</exec_depend>
+  <exec_depend>grouper</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>python-conditional</exec_depend>
+  <exec_depend>python-numpy</exec_depend>
+  <exec_depend>rosbag</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>rospy_wrapper</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <export>
+  </export>
+</package>
