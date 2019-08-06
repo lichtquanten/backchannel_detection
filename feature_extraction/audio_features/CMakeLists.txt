@@ -7,6 +7,8 @@ find_package(catkin REQUIRED
   std_msgs
 )
 
+catkin_python_setup()
+
 add_message_files(DIRECTORY msg FILES
   AudioFeatures.msg
 )

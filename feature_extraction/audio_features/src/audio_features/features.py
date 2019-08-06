@@ -2,8 +2,9 @@ from abc import ABCMeta, abstractmethod
 import aubio
 from grouper import BlockArrLike
 import numpy as np
+import webrtcvad
 
-Feature(object):
+class Feature(object):
     __metaclass__ = ABCMeta
 
     def __init__(self):
@@ -24,8 +25,8 @@ class Pitch(Feature):
     def __init__(self, sample_rate, buffer_size=1024, hop_size=512):
         self._pitch_detector = aubio.pitch('yin', buffer_size, hop_size, sample_rate)
         self._pitch_detector.set_unit("Hz")
-        self._blocks = BlockArrLike(buffer_size, np.array([], np.float32), np.append)
-        self._output_buffer = np.array([], np.float32)
+        self._blocks = BlockArrLike(hop_size, np.array([], np.float32), np.append)
+        self._output_buffer = []
 
     def next(self):
         if not self._output_buffer:
@@ -33,12 +34,14 @@ class Pitch(Feature):
         return self._output_buffer.pop(0)
 
     def put(self, audio, start, end):
-        # Convert to float [0,1]
-        audio = audio / float(np.iinfo(audio.dtype).max) + 0.5
-        self._blocks.put(audio, start_time, end_time)
-        for block, b_start_time, b_end_time in blocks:
-            (pitch, _) = self._pitch_o(block)
-            self._output_buffer.append((pitch, b_stat_time, b_end_time))
+        # Convert to float [-1,1]
+        audio = audio / float(np.iinfo(audio.dtype).max)
+        audio = audio.astype(np.float32)
+        self._blocks.put(audio, start, end)
+        for block, b_start, b_end in self._blocks:
+            pitch =  self._pitch_detector(block)[0]
+            confidence = self._pitch_detector.get_confidence()
+            self._output_buffer.append(((pitch, confidence), b_start, b_end))
 
 class Is_Speech(Feature):
     _BLOCK_DURATION = 0.02
@@ -54,12 +57,12 @@ class Is_Speech(Feature):
             raise StopIteration
         return self._output_buffer.pop(0)
 
-    def put(self, audio, start_time, end_time):
-        self._blocks.put(audio, start_time, end_time)
-        for block, b_start_time, b_end_time in self._blocks:
+    def put(self, audio, start, end):
+        self._blocks.put(audio, start, end)
+        for block, b_start, b_end in self._blocks:
             block = str(bytearray(block))
-            is_speech = self._vad.is_speech(block)
-            self._output_buffer.append((is_speech, b_start_time, b_end_time))
+            is_speech = self._vad.is_speech(block, self._sample_rate)
+            self._output_buffer.append((is_speech, b_start, b_end))
 
 #
 # # Receives pitch

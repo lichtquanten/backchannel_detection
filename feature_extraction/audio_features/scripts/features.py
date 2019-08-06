@@ -15,8 +15,8 @@ from std_msgs.msg import Header, Time, Int32
 def main():
 	# Get topic parameters
 	audio_topic = rospy.get_param('~audio_topic')
-	start_time_topic = rospy.get_param('~start_time_topic', '/bc/start_time')
-	window_duration_topic = rospy.get_param('~window_duration_topic', '/bc/window_duration')
+	start_time_topic = rospy.get_param('~start_time_topic', '/central/start_time')
+	window_duration_topic = rospy.get_param('~window_duration_topic', '/central/window_duration')
 	features_topic = rospy.get_param('~features_topic', '/bc/audio_features')
 
 	# Get source, sink parameters
@@ -54,8 +54,8 @@ def main():
 	rospy.loginfo('Found start time, window duration.')
 
 	with conditional(bag, bag):
-		with audio_source, features_sink:
-			compute_audio_features(audio_source, features_sink, start_time, window_duration)
+		with audio_src, features_sink:
+			compute_audio_features(audio_src, features_sink, start_time, window_duration)
 
 if __name__ == '__main__':
 	rospy.init_node('audio_features', anonymous=True)
