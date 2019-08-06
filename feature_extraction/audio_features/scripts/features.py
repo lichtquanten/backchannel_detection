@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from audio_features import compute_audio_features
+from audio_io.utils import width_to_dtype
 from conditional import conditional
 import grouper
 import numpy as np
@@ -10,18 +12,7 @@ from audio_io_msgs.msg import AudioData
 from audio_features.msg import AudioFeatures
 from std_msgs.msg import Header, Time, Int32
 
-def width_to_dtype(width):
-	if width == 1:
-		return np.int8
-	if width == 2:
-		return np.int16
-	if width == 4:
-		return np.int32
-	if width == 8:
-		return np.int64
-	return None
-
-def get_configuration():
+def main():
 	# Get topic parameters
 	audio_topic = rospy.get_param('~audio_topic')
 	start_time_topic = rospy.get_param('~start_time_topic', '/bc/start_time')
@@ -62,33 +53,9 @@ def get_configuration():
 		window_duration = rospy.Duration(msg.data / 1000.)
 	rospy.loginfo('Found start time, window duration.')
 
-	return (bag, audio_src, features_sink, start_time, window_duration)
-
-def main():
-	(bag, audio_source, features_sink, start_time, window_duration) = get_configuration()
-	combiner = grouper.Combiner(start_time, window_duration, ['mean', 'meme'])
-	windows = grouper.Window(start_time, window_duration)
 	with conditional(bag, bag):
 		with audio_source, features_sink:
-			for msg, t in audio_source:
-				if msg.num_channels != 1:
-					raise Exception('Only single channel (mono) audio is accepted.')
-				if not msg.data:
-					continue
-				dtype = width_to_dtype(msg.sample_width)
-				data = np.fromstring(msg.data, dtype)
-				m = np.mean(data)
-				windows.put(m, t, t + rospy.Duration(float(len(data)) / msg.sample_rate))
-				for window, start, end in windows:
-					combiner.put('mean', np.mean(window), start, end)
-					combiner.put('meme', True, start, end)
-				for bundle, start, end in combiner:
-					msg = bundle
-					h = Header()
-					h.stamp = start
-					bundle['header'] = h
-					features_sink.put(bundle, start)
-			# features = compute_audio_features(audio, start_time)
+			compute_audio_features(audio_source, features_sink, start_time, window_duration)
 
 if __name__ == '__main__':
 	rospy.init_node('audio_features', anonymous=True)
