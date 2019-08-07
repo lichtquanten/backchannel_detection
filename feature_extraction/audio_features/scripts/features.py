@@ -1,16 +1,9 @@
 #!/usr/bin/env python
 from audio_features import compute_audio_features
-from audio_io.utils import width_to_dtype
 from conditional import conditional
-import grouper
-import numpy as np
 import rosbag
 import rospy
 from rospywrapper import BagSource, TopicSource, TopicSink, BagSink
-
-from audio_io_msgs.msg import AudioData
-from audio_features.msg import AudioFeatures
-from std_msgs.msg import Header, Time, Int32
 
 def main():
 	# Get topic parameters

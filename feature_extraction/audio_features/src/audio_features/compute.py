@@ -3,7 +3,9 @@ from features import *
 from grouper import Combiner, Window
 import rospy
 
+from audio_io_msgs.msg import AudioData
 from audio_features.msg import AudioFeatures
+from std_msgs.msg import Header, Time, Int32
 
 FEATURE_LIST = [
     'mean',
@@ -20,9 +22,16 @@ def compute_audio_features(audio_source, features_sink, start_time, window_durat
         if first_pass:
             first_pass = False
             dtype = width_to_dtype(msg.sample_width)
-            pitches = Pitch(msg.sample_rate)
-            # relative_pitches = Relative(10000)
+
+            pitches = Pitch(msg.sample_rate, confidence_threshold=0.6)
+            relative_pitches = Relative(10000)
             is_speeches = Is_Speech(msg.sample_rate, dtype)
+            def is_valid(nbhd):
+                return (float(sum(nbhd)) / len(nbhd)) / .9
+            speech_nbhd = Neighborhood(is_valid, 100)
+
+            # Continuous speech counter
+            cont_speech_ct = Counter(is_valid=lambda is_speech : is_speech)
 
         # Pre-process the data
         data_np = np.fromstring(msg.data, dtype)
@@ -36,19 +45,20 @@ def compute_audio_features(audio_source, features_sink, start_time, window_durat
         is_speeches.put(data_np, t, t + duration)
 
         for (pitch, confidence), start, end in pitches:
-            print pitch, confidence
+            pitch
             # relative_pitches.put(pitch, start, end)
 
-        # for relative_pitch, start, end in relative_pitches:
-        #     relative_pitches.put(relative_pitch, start, end)
-
         for is_speech, start, end in is_speeches:
-            # print is_speech
-            pass
+            is_speeches_boosted.put(is_speech, start, end)
+            cont_speech_duration.put(is_speech, start, end)
+        for is_speech, start, end in is_speeches_boosted:
+            continuous_speech_duration.put(is_speech, start, end)
+
+        # Prepare for the combiner
 
         # Add to combiner
-        # for pitch, start, end in mean_pitches:
-        #     combiner.put('pitch', pitch, start, end)
+        # for mean_pitch, start, end in mean_pitches:
+        #     combiner.put('mean_pitch', pitch, start, end)
         #
         # for mean_relative_pitch, start, end in mean_relative_pitches:
         #     combiner.put('relative_pitch', mean_relative_pitch, start, end)

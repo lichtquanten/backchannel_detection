@@ -21,6 +21,8 @@ class Feature(object):
     def put(self, data, t):
         pass
 
+# This is done
+# Outputs the pitch, confidence corresponding `hop_size` blocks
 class Pitch(Feature):
     def __init__(self, sample_rate, buffer_size=1024, hop_size=512):
         self._pitch_detector = aubio.pitch('yin', buffer_size, hop_size, sample_rate)
@@ -43,6 +45,9 @@ class Pitch(Feature):
             confidence = self._pitch_detector.get_confidence()
             self._output_buffer.append(((pitch, confidence), b_start, b_end))
 
+# This is done
+# Outputs True or false of blocks of length
+# `_BLOCK_DURATION` * sample_rate
 class Is_Speech(Feature):
     _BLOCK_DURATION = 0.02
     def __init__(self, sample_rate, dtype, aggressiveness=1):
@@ -64,16 +69,9 @@ class Is_Speech(Feature):
             is_speech = self._vad.is_speech(block, self._sample_rate)
             self._output_buffer.append((is_speech, b_start, b_end))
 
-#
-# # Receives pitch
+# Keep a buffer of the last buffer_size samples. Compute the mean
+# compare earliest value to that mean
 # class Relative(Feature):
-#     def __init__(self, dtype, buffer_size=1000):
-#         self._full =
-#
-#     def put(self, value, start, end):
-#         pass
-#
-# class Mean(Feature):
 #     def __init__(self, dtype, buffer_size=1000):
 #         self._full =
 #
