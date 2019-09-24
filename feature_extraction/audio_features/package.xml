@@ -17,6 +17,7 @@
   <exec_depend>python-aubio</exec_depend>
   <exec_depend>python-conditional</exec_depend>
   <exec_depend>python-numpy</exec_depend>
+  <exec_depend>python-scipy</exec_depend>
   <exec_depend>python-webrtcvad</exec_depend>
   <exec_depend>rosbag</exec_depend>
   <exec_depend>rospy</exec_depend>

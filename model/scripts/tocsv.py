@@ -16,6 +16,7 @@ def flatten_bundle(bundle):
     out['time_since_speech'] = audio.time_since_speech
     out['mean_relative_pitch'] = audio.mean_relative_pitch
     out['low_pitch_duration'] = audio.low_pitch_duration
+    out['mean_relative_pitch_slope'] = audio.mean_relative_pitch_slope
     return out
 
 def main():
@@ -31,7 +32,7 @@ def main():
         bundle_source = TopicSource(bundle_topic, Bundle)
 
     with bundle_source, open(csv_path, 'w') as csv_file:
-        headers = ['time', 'all_speech', 'contains_speech', 'speech_duration', 'time_since_speech', 'mean_relative_pitch', 'low_pitch_duration']
+        headers = ['time', 'all_speech', 'contains_speech', 'speech_duration', 'time_since_speech', 'mean_relative_pitch', 'low_pitch_duration', 'mean_relative_pitch_slope']
         writer = csv.DictWriter(csv_file, headers)
         writer.writeheader()
         for msg, t in bundle_source:
