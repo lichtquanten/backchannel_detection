@@ -1,3 +1,5 @@
 std_msgs/Header header
-float32 mean
-bool meme
+bool all_speech
+bool contains_speech
+duration speech_duration
+duration time_since_speech

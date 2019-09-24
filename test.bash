@@ -4,7 +4,7 @@ if  ! [[ $# -eq 2 ]]
 then
   echo "2 arguments required, $# provided."
   echo "./test.bash SOURCE.bag OUT.csv"
-  return 1
+  exit 1
 fi
 
 af_tmp=$(mktemp /tmp/af.XXXXXX)
