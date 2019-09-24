@@ -17,7 +17,7 @@ class Pitch():
         self._pitch_detector = aubio.pitch('yin', buffer_size, hop_size, sample_rate)
         self._pitch_detector.set_unit("Hz")
 
-    def calculate(audio):
+    def calculate(self, audio):
         # Convert to float [-1,1]
         audio = audio / float(np.iinfo(audio.dtype).max)
         audio = audio.astype(np.float32)
@@ -45,67 +45,23 @@ class Is_Speech():
         # is_speech = self._vad.is_speech(audio, self._sample_rate)
         is_speech = self._vad.is_speech(audio, 48000)
         self._nbhds.put(is_speech, start, end)
-#
-# class Rolling():
-#     """Provides a list of the last `length` data input before each datum.
-#
-#     Consider a history with length 100. After inputting 101 data, a list of
-#     100 data would be produced, with its timestamp given by the timestamp of
-#     the 101st datum.
-#     """
-#     def __init__(self, length):
-#         """
-#         Parameters
-#         ----------
-#         length : int
-#             The number of data to be included in each history.
-#         """
-#         self._buffer = np.array([])
-#         self._length = length
-#         self._data = []
-#         self._times = []
-#         self._output_buffer = []
-#
-#     def next(self):
-#         """
-#         Returns
-#         -------
-#         list
-#             The earliest `length` list of data that have not yet been returned.
-#         any
-#             The start time of the first received datum after the last datum
-#             in the list.
-#         any
-#             The end time of the first received datum after the last datum in
-#             the list.
-#
-#         Raises
-#         ------
-#         StopIteration
-#             When there are not enough data in the buffer to create a history of
-#             length `length`.
-#         """
-#         if len(self._data) <= self._length:
-#             raise StopIteration
-#         start, end = self._times[self._length]
-#         out = self._data[:self._length]
-#         del self._data[0]
-#         del self._times[0]
-#         return out, start, end
-#
-#     def put(self, datum, start_time, end_time):
-#         """Add `datum` to the buffer.
-#
-#         `datum` assumed to be after, by timestamp, all previously put data.
-#
-#         Parameters
-#         ----------
-#         datum: any
-#             Anything.
-#         start_time : any
-#             The start time associated with `datum`.
-#         end_time : any
-#             The end time associated with `datum`.
-#         """
-#         self._data.append(datum)
-#         self._times.append((start_time, end_time))
+
+class Relative():
+    def __init__(self, length):
+        self._length = length
+        self._indices = np.array([])
+        self._sorted = np.array([])
+    def calculate(self, value):
+        if len(self._sorted) == 0:
+            i = 0
+        else:
+            i = np.searchsorted(self._sorted, value)
+            vfunc = np.vectorize(lambda x: x + (1 if x >= i else 0))
+            self._indices = vfunc(self._indices)
+        self._sorted = np.insert(self._sorted, i, value)
+        self._indices = np.append(self._indices, i)
+        relative = i / float(len(self._sorted))
+        if len(self._sorted) > self._length:
+            self._sorted = np.delete(self._sorted, self._indices[0])
+            self._indices = self._indices[1:]
+        return relative
