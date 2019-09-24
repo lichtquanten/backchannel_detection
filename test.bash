@@ -10,15 +10,18 @@ fi
 af_tmp=$(mktemp /tmp/af.XXXXXX)
 nf_tmp=$(mktemp /tmp/nf.XXXXXX)
 bundle_tmp=$(mktemp /tmp/bundle.XXXXXX)
+WINDOW_DURATION=0.1
 
 rosrun audio_features features.py \
   _audio_topic:=/mic/data \
+  _window_duration:=$WINDOW_DURATION \
   _source_bag_path:=$1 \
   _sink_bag_path:=$af_tmp
 
 rosrun audio_features features.py \
   _audio_topic:=/mic/data \
   _features_topic:=/bc/nod_features \
+  _window_duration:=$WINDOW_DURATION \
   _source_bag_path:=$1 \
   _sink_bag_path:=$nf_tmp
 
@@ -26,7 +29,7 @@ rosrun bundler bundle.py \
   _audio_bag_path:=$af_tmp \
   _nod_bag_path:=$nf_tmp \
   _start_time_bag_path:=$1 \
-  _window_duration_bag_path:=$1 \
+  _window_duration:=$WINDOW_DURATION \
   _sink_bag_path:=$bundle_tmp
 
 rosrun model tocsv.py \

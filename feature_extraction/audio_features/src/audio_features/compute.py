@@ -158,11 +158,11 @@ def compute_audio_features(
         for window, start, end in is_speech_windows:
             combiner.put(
                 'contains_speech',
-                any(window), start, end
+                len(window) > 0 and any(window), start, end
             )
             combiner.put(
                 'all_speech',
-                all(window), start, end
+                len(window) > 0 and all(window), start, end
             )
 
         for window, start, end in is_speech_counter_windows:
@@ -180,15 +180,17 @@ def compute_audio_features(
             )
 
         for window, start, end in rel_pitch_windows:
+            m = np.mean(window) if window else 0
             combiner.put(
                 'mean_relative_pitch',
                 np.mean(window), start, end
             )
 
         for window, start, end in low_rel_pitch_counter_windows:
+            m = np.max(window) if window else 0
             combiner.put(
                 'low_pitch_duration',
-                max(window) * pitch_block_duration,
+                m * pitch_block_duration,
                 start, end
             )
 

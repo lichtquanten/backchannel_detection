@@ -21,6 +21,7 @@ def main():
     nod_bag_path = rospy.get_param('~nod_bag_path', None)
     start_time_topic = rospy.get_param('~start_time_topic', '/bc/start_time')
     start_time_bag_path = rospy.get_param('~start_time_bag_path', None)
+    window_duration = rospy.get_param('~window_duration', None)
     window_duration_topic = rospy.get_param('~window_duration_topic', '/bc/window_duration')
     window_duration_bag_path = rospy.get_param('~window_duration_bag_path', None)
     output_topic = rospy.get_param('~output_topic', '/bc/bundle')
@@ -41,10 +42,11 @@ def main():
         start_time_src = BagSource(start_time_bag_path, start_time_topic)
     else:
         start_time_src = TopicSource(start_time_topic, Time)
-    if window_duration_bag_path:
-        window_duration_src = BagSource(window_duration_bag_path, window_duration_topic)
-    else:
-        window_duration_src = TopicSource(window_duration_topic, Int32)
+    if not window_duration:
+        if window_duration_bag_path:
+            window_duration_src = BagSource(window_duration_bag_path, window_duration_topic)
+        else:
+            window_duration_src = TopicSource(window_duration_topic, Int32)
 
     # Instantiate sink
     if sink_bag_path:
@@ -59,9 +61,12 @@ def main():
     with start_time_src:
         msg, _ = next(start_time_src)
         start_time = msg.data
-    with window_duration_src:
-        msg, _ = next(window_duration_src)
-        window_duration = rospy.Duration(msg.data / 1000.)
+    if window_duration:
+        window_duration = rospy.Duration(window_duration)
+    else:
+        with window_duration_src:
+            msg, _ = next(window_duration_src)
+            window_duration = rospy.Duration(msg.data / 1000.)
     rospy.loginfo('Found start time, window duration.')
 
     combiner = Combiner(start_time, window_duration, ['audio', 'nod'])

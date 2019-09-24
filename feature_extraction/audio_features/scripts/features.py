@@ -48,7 +48,9 @@ def main():
             start_time = msg.data
 
     # Get the window duration
-    if not window_duration:
+    if window_duration:
+        window_duration = rospy.Duration(window_duration)
+    else:
         with window_duration_src:
             msg, _ = next(window_duration_src)
             window_duration = rospy.Duration(msg.data / 1000.)
