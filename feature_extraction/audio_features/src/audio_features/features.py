@@ -7,8 +7,12 @@ class Energy():
     def __init__(self):
         return
 
+    @staticmethod
     def calculate(audio):
-        return 5
+        # Convert to float [-1,1]
+        audio = audio / float(np.iinfo(audio.dtype).max)
+        audio = audio.astype(np.float32)
+        return np.mean(np.square(audio))
 
 # This is done
 # Outputs the pitch, confidence corresponding `hop_size` blocks
@@ -67,21 +71,30 @@ class Relative():
         return relative
 
 class Relative():
-    def __init__(self, length):
+    def __init__(self, length, interval=1):
         self._length = length
         self._indices = np.array([])
         self._sorted = np.array([])
+        self._interval = interval
+        self._wait = interval
     def calculate(self, value):
-        if len(self._sorted) == 0:
+        if not len(self._sorted):
             i = 0
         else:
             i = np.searchsorted(self._sorted, value)
             vfunc = np.vectorize(lambda x: x + (1 if x >= i else 0))
             self._indices = vfunc(self._indices)
-        self._sorted = np.insert(self._sorted, i, value)
-        self._indices = np.append(self._indices, i)
-        relative = i / float(len(self._sorted))
-        if len(self._sorted) > self._length:
-            self._sorted = np.delete(self._sorted, self._indices[0])
-            self._indices = self._indices[1:]
+        if not len(self._sorted):
+            relative = 1
+        else:
+            relative = i /float(len(self._sorted))
+        if self._wait > 0:
+            self._wait -= 1
+        if self._wait == 0 or len(self._sorted) < self._length:
+            self._sorted = np.insert(self._sorted, i, value)
+            self._indices = np.append(self._indices, i)
+            self._wait = self._interval
+            if len(self._sorted) > self._length:
+                self._sorted = np.delete(self._sorted, self._indices[0])
+                self._indices = self._indices[1:]
         return relative

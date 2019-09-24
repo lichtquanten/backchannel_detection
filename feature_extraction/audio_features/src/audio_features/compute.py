@@ -12,6 +12,8 @@ FEATURE_LIST = [
     'mean_relative_pitch',
     'low_pitch_duration',
     'mean_relative_pitch_slope',
+    'mean_relative_energy',
+    'mean_relative_energy_slope',
 ]
 
 def compute_audio_features(
@@ -56,9 +58,17 @@ def compute_audio_features(
     pitch_blocks = BlockArrLike(pitch_block_length, np.array([], dtype), np.append)
     pitch_calc = Pitch(sample_rate, buffer_size=(2 * pitch_block_length),
         hop_size=pitch_block_length)
-    relative_pitch = Relative(1000)
+    relative_pitch = Relative(1000, 25)
     low_rel_pitch_counter = Counter(lambda x: x < 0.26)
     rel_pitch_history_short = History(1000)
+
+    # Energy
+    energy_block_length = 1024
+    energy_block_duration = get_duration(energy_block_length) / float(sample_rate)
+    energy_blocks = BlockArrLike(energy_block_length, np.array([], dtype), np.append)
+    energy_calc = Energy()
+    relative_energy = Relative(1000, 25)
+    rel_energy_history = History(100)
 
     # Create window objects for each feature
     is_speech_windows = Window(start_time, window_duration)
@@ -67,6 +77,8 @@ def compute_audio_features(
     rel_pitch_windows = Window(start_time, window_duration)
     low_rel_pitch_counter_windows = Window(start_time, window_duration)
     rel_pitch_slope_windows = Window(start_time, window_duration)
+    rel_energy_windows = Window(start_time, window_duration)
+    rel_energy_slope_windows = Window(start_time, window_duration)
 
     # Create combiner for all features
     combiner = Combiner(start_time, window_duration, FEATURE_LIST)
@@ -106,9 +118,7 @@ def compute_audio_features(
 
         for audio, start, end in speech():
             pitch_blocks.put(audio, start, end)
-
-        for audio, start, end in is_speech_audio_aligner:
-            pitch_blocks.put(audio, start, end)
+            energy_blocks.put(audio, start, end)
 
         for block, start, end in pitch_blocks:
             if (end - start) / pitch_block_duration > 1.3:
@@ -126,9 +136,24 @@ def compute_audio_features(
         for history, start, end in rel_pitch_history_short:
             dur = end - start
             dur = dur.to_sec()
-            x = np.array(range(len(history))) / dur
+            x = np.array(range(len(history))) / float(dur)
             slope, _, _, _, _ = stats.linregress(x, history)
             rel_pitch_slope_windows.put(slope, start, end)
+
+        for block, start, end in energy_blocks:
+            if (end - start) / energy_block_duration > 1.3:
+                continue
+            energy = energy_calc.calculate(block)
+            rel_energy = relative_energy.calculate(energy)
+            rel_energy_windows.put(energy, start, end)
+            rel_energy_history.put(rel_energy, start, end)
+
+        for history, start, end in rel_energy_history:
+            dur = end - start
+            dur = dur.to_sec()
+            x = np.array(range(len(history))) / float(dur)
+            slope, _, _, _, _ = stats.linregress(x, history)
+            rel_energy_slope_windows.put(slope, start, end)
 
         for window, start, end in is_speech_windows:
             combiner.put(
@@ -170,8 +195,19 @@ def compute_audio_features(
         for window, start, end in rel_pitch_slope_windows:
             combiner.put(
                 'mean_relative_pitch_slope',
-                max(window), start, end
+                np.mean(window), start, end
             )
 
+        for window, start, end in rel_energy_windows:
+            combiner.put(
+                'mean_relative_energy',
+                np.mean(window), start, end
+            )
+
+        for window, start, end in rel_energy_slope_windows:
+            combiner.put(
+                'mean_relative_energy_slope',
+                np.mean(window), start, end
+            )
         for bundle, start, end in combiner:
             put_features(bundle, start)

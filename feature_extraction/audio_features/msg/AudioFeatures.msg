@@ -6,3 +6,5 @@ duration time_since_speech
 float64 mean_relative_pitch
 duration low_pitch_duration
 float64 mean_relative_pitch_slope
+float64 mean_relative_energy
+float64 mean_relative_energy_slope
