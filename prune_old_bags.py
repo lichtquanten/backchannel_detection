@@ -33,7 +33,7 @@ def main(argv):
     	for topic, msg, t in in_bag.read_messages(topics=face_topics + audio_topics):
     		pid = re.findall(r'\d', topic)[0]
     		if topic in face_topics:
-    			if not msg.landmarks3D:
+    			if not msg.landmarks:
     				continue
 
     			ff_msg = FaceFeatures()
@@ -45,7 +45,7 @@ def main(argv):
 
     			# Landmarks 3D
     			ff_msg.landmarks_3D = []
-    			for landmark in msg.landmarks3D:
+    			for landmark in msg.landmarks:
     				ff_msg.landmarks_3D.append(Vector3(landmark.x, landmark.y, landmark.z))
 
     			# Landmarks visibilities (unused)
