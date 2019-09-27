@@ -51,26 +51,6 @@ class Is_Speech():
         self._nbhds.put(is_speech, start, end)
 
 class Relative():
-    def __init__(self, length):
-        self._length = length
-        self._indices = np.array([])
-        self._sorted = np.array([])
-    def calculate(self, value):
-        if len(self._sorted) == 0:
-            i = 0
-        else:
-            i = np.searchsorted(self._sorted, value)
-            vfunc = np.vectorize(lambda x: x + (1 if x >= i else 0))
-            self._indices = vfunc(self._indices)
-        self._sorted = np.insert(self._sorted, i, value)
-        self._indices = np.append(self._indices, i)
-        relative = i / float(len(self._sorted))
-        if len(self._sorted) > self._length:
-            self._sorted = np.delete(self._sorted, self._indices[0])
-            self._indices = self._indices[1:]
-        return relative
-
-class Relative():
     def __init__(self, length, interval=1):
         self._length = length
         self._indices = np.array([])
