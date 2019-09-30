@@ -58,17 +58,17 @@ def compute_audio_features(
     pitch_blocks = BlockArrLike(pitch_block_length, np.array([], dtype), np.append)
     pitch_calc = Pitch(sample_rate, buffer_size=(2 * pitch_block_length),
         hop_size=pitch_block_length)
-    relative_pitch = Relative(1000, 25)
+    relative_pitch = Relative(100, 1)
     low_rel_pitch_counter = Counter(lambda x: x < 0.26)
-    rel_pitch_history_short = History(1000)
+    rel_pitch_history_short = History(10)
 
     # Energy
     energy_block_length = 1024
     energy_block_duration = get_duration(energy_block_length) / float(sample_rate)
     energy_blocks = BlockArrLike(energy_block_length, np.array([], dtype), np.append)
     energy_calc = Energy()
-    relative_energy = Relative(1000, 25)
-    rel_energy_history = History(100)
+    relative_energy = Relative(100, 1)
+    rel_energy_history = History(10)
 
     # Create window objects for each feature
     is_speech_windows = Window(start_time, window_duration)
