@@ -11,10 +11,6 @@ audio_features_P1_tmp=$(mktemp /tmp/af1.XXXXXX)
 audio_features_P2_tmp=$(mktemp /tmp/af2.XXXXXX)
 audio_features_P3_tmp=$(mktemp /tmp/af3.XXXXXX)
 bundle_tmp=$(mktemp /tmp/bundle.XXXXXX)
-audio_features_P1_tmp=p1.bag
-audio_features_P2_tmp=p2.bag
-audio_features_P3_tmp=p3.bag
-bundle_tmp=bundle.bag
 WINDOW_DURATION=0.1
 
 rosrun audio_features features.py \
