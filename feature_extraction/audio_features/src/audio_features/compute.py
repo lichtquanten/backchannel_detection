@@ -155,14 +155,21 @@ def compute_audio_features(
             rel_energy_slope_windows.put(slope, start, end)
 
         for window, start, end in is_speech_windows:
+            contains_speech = len(window) > 0 and any(window)
             combiner.put(
                 'contains_speech',
-                len(window) > 0 and any(window), start, end
+                contains_speech, start, end
             )
             combiner.put(
                 'all_speech',
                 len(window) > 0 and all(window), start, end
             )
+            if not contains_speech:
+                for topic in ['mean_relative_pitch', 'low_pitch_duration', 'mean_relative_pitch_slope', 'mean_relative_energy', 'mean_relative_energy_slope']:
+                    combiner.put(
+                        topic,
+                        None, start, end
+                    )
 
         for window, start, end in is_speech_counter_windows:
             combiner.put(
