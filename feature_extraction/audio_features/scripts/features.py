@@ -7,6 +7,7 @@ import rospy
 from rospywrapper import BagSource, TopicSource, TopicSink, BagSink
 
 from audio_features.msg import AudioFeatures
+from audio_io_msgs.msg import AudioData
 from std_msgs.msg import Header, Time, Int32
 
 def main():
