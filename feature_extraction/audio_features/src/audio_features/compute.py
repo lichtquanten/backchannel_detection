@@ -36,7 +36,6 @@ def compute_audio_features(
 
     # Speech
     is_speech_block_length = int(sample_rate * 0.02)
-    is_speech_block_length = int(48000 * 0.02)
     is_speech_block_duration = get_duration(is_speech_block_length / float(sample_rate))
     speech_blocks = BlockArrLike(is_speech_block_length * num_channels, np.array([], dtype), np.append)
     is_speech = Is_Speech(sample_rate)

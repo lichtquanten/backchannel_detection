@@ -46,8 +46,7 @@ class Is_Speech():
 
     def put(self, audio, start, end):
         audio = str(bytearray(audio))
-        # is_speech = self._vad.is_speech(audio, self._sample_rate)
-        is_speech = self._vad.is_speech(audio, 48000)
+        is_speech = self._vad.is_speech(audio, self._sample_rate)
         self._nbhds.put(is_speech, start, end)
 
 class Relative():
