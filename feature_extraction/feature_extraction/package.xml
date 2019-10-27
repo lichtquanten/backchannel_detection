@@ -10,7 +10,6 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <exec_depend>audio_features</exec_depend>
-  <exec_depend>nod_detection</exec_depend>
 
   <export>
   	<metapackage />
