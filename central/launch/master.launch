@@ -7,12 +7,43 @@
 	/>
 
 	<node
+		pkg="audio_io"
+		type="capture.py"
+		name="mic1"
+		output="screen"
+	>
+		<param name="device_name" value="hw:2,0" />
+		<param name="num_channels" value="1" />
+		<param name="sample_rate" value="16000" />
+	</node>
+	<node
+		pkg="audio_io"
+		type="capture.py"
+		name="mic2"
+		output="screen"
+	>
+		<param name="device_name" value="hw:3,0" />
+		<param name="num_channels" value="1" />
+		<param name="sample_rate" value="16000" />
+	</node>
+	<node
+		pkg="audio_io"
+		type="capture.py"
+		name="mic3"
+		output="screen"
+	>
+		<param name="device_name" value="hw:4,0" />
+		<param name="num_channels" value="1" />
+		<param name="sample_rate" value="16000" />
+	</node>
+
+	<node
 		pkg="audio_features"
 		type="features.py"
 		name="audio_features1"
 		output="screen"
 	>
-		<param name="audio_topic" value="/pid1/data" />
+		<param name="audio_topic" value="/mic1/data" />
 		<param name="features_topic" value="/bc/audio_features1" />
 	</node>
 	<node
@@ -21,7 +52,7 @@
 		name="audio_features2"
 		output="screen"
 	>
-		<param name="audio_topic" value="/pid2/data" />
+		<param name="audio_topic" value="/mic2/data" />
 		<param name="features_topic" value="/bc/audio_features2" />
 	</node>
 	<node
@@ -30,7 +61,7 @@
 		name="audio_features3"
 		output="screen"
 	>
-		<param name="audio_topic" value="/pid3/data" />
+		<param name="audio_topic" value="/mic3/data" />
 		<param name="features_topic" value="/bc/audio_features3" />
 	</node>
 
