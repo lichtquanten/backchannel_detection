@@ -1,43 +1,11 @@
 #!/usr/bin/env python
-from conditional import conditional
 import csv
 import rospy
 from rospywrapper import BagSource, TopicSource
 
+from model import bundle_msg_to_dict, create_pairwise_rows
+
 from bundler.msg import Bundle
-
-def add_pid(msg, pid):
-    out = {}
-    for key in msg:
-        out[key + '_' + pid] = msg[key]
-    return out
-
-def msg_to_dict(msg):
-    dictionary = {}
-    message_fields = zip(msg.__slots__, msg._slot_types)
-    for field_name, field_type in message_fields:
-        if field_name == 'header':
-            continue
-        field_value = getattr(msg, field_name)
-        dictionary[field_name] = str(field_value)
-
-    return dictionary
-
-
-def bundle_to_dict(bundle):
-    # Convert audio messages to dictionaries
-    audio_p1 = msg_to_dict(bundle.audio_features_P1)
-    audio_p2 = msg_to_dict(bundle.audio_features_P2)
-    audio_p3 = msg_to_dict(bundle.audio_features_P3)
-    # Add pid
-    audio_p1 = add_pid(audio_p1, 'P1')
-    audio_p2 = add_pid(audio_p2, 'P2')
-    audio_p3 = add_pid(audio_p3, 'P3')
-    out = {}
-    out.update(audio_p1)
-    out.update(audio_p2)
-    out.update(audio_p3)
-    return out
 
 def main():
     # Get parameters
@@ -54,13 +22,20 @@ def main():
     with bundle_source, open(csv_path, 'w') as csv_file:
         writer = None
         for msg, t in bundle_source:
-            row = bundle_to_dict(msg)
-            row['time'] = t
+            row = bundle_msg_to_dict(msg)
+            for key in row.keys():
+                if row[key] == 'True':
+                    row[key] = 1
+                elif row[key] == 'False':
+                    row[key] = 0
+            row['time'] = t.to_sec()
+            pairwise_rows = create_pairwise_rows(row)
             if not writer:
-                headers = row.keys()
+                headers = pairwise_rows[0].keys()
                 writer = csv.DictWriter(csv_file, headers)
                 writer.writeheader()
-            writer.writerow(row)
+            for pairwise_row in pairwise_rows:
+                writer.writerow(pairwise_row)
 
 if __name__ == '__main__':
     rospy.init_node('bundle_to_csv', anonymous=True)
