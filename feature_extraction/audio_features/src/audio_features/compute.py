@@ -83,6 +83,8 @@ def compute_audio_features(
     combiner = Combiner(start_time, window_duration, FEATURE_LIST)
 
     for data, t in audio:
+        if rospy.is_shutdown():
+            return
         # Convert data to numpy array
         data_np = np.fromstring(data, dtype)
 
@@ -165,23 +167,30 @@ def compute_audio_features(
                 len(window) > 0 and all(window), start, end
             )
             if not contains_speech:
-                for topic in ['mean_relative_pitch', 'low_pitch_duration', 'mean_relative_pitch_slope', 'mean_relative_energy', 'mean_relative_energy_slope']:
+                for topic in ['mean_relative_pitch', 'mean_relative_pitch_slope', 'mean_relative_energy', 'mean_relative_energy_slope']:
                     combiner.put(
                         topic,
-                        None, start, end
+                        0, start, end
+                    )
+                for topic in ['low_pitch_duration']:
+                    combiner.put(
+                        topic,
+                        rospy.Duration(0), start, end
                     )
 
         for window, start, end in is_speech_counter_windows:
+            m = is_speech_block_duration * max(window) if window else rospy.Duration(0)
             combiner.put(
                 'speech_duration',
-                is_speech_block_duration * max(window),
+                m,
                 start, end
             )
 
         for window, start, end in is_not_speech_counter_windows:
+            m = is_speech_block_duration * max(window) if window else rospy.Duration(0)
             combiner.put(
                 'time_since_speech',
-                is_speech_block_duration * max(window),
+                m,
                 start, end
             )
 
@@ -189,33 +198,36 @@ def compute_audio_features(
             m = np.mean(window) if window else 0
             combiner.put(
                 'mean_relative_pitch',
-                np.mean(window), start, end
+                m, start, end
             )
 
         for window, start, end in low_rel_pitch_counter_windows:
-            m = np.max(window) if window else 0
+            m = np.max(window) * pitch_block_duration if window else rospy.Duration(0)
             combiner.put(
                 'low_pitch_duration',
-                m * pitch_block_duration,
+                m,
                 start, end
             )
 
         for window, start, end in rel_pitch_slope_windows:
+            m = np.mean(window) if window else 0
             combiner.put(
                 'mean_relative_pitch_slope',
-                np.mean(window), start, end
+                m, start, end
             )
 
         for window, start, end in rel_energy_windows:
+            m = np.mean(window) if window else 0
             combiner.put(
                 'mean_relative_energy',
-                np.mean(window), start, end
+                m, start, end
             )
 
         for window, start, end in rel_energy_slope_windows:
+            m = np.mean(window) if window else 0
             combiner.put(
                 'mean_relative_energy_slope',
-                np.mean(window), start, end
+                m, start, end
             )
         for bundle, start, end in combiner:
             put_features(bundle, start)
