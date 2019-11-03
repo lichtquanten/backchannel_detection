@@ -14,3 +14,4 @@ for file in $bag_directory/*; do
 	feature_file=$feature_file_directory/$group.csv
 	(/home/sean/ws/src/backchannel_detection/extract.bash $file $feature_file 1> $log_directory/out/$group.log 2> $log_directory/err/$group.log && echo "----DONE----" >> /home/sean/.log/out/$group.log) &
 done
+wait

@@ -50,5 +50,4 @@ rosrun model tocsv.py \
   _source_bag_path:=$bundle_tmp \
   _csv_path:=$2
 
-# rm $audio_features_P1_tmp $audio_features_P2_tmp $audio_features_P3_tmp $bundle_tmp
-
+rm $audio_features_P1_tmp $audio_features_P2_tmp $audio_features_P3_tmp $bundle_tmp
