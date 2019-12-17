@@ -12,6 +12,7 @@ catkin_python_setup()
 add_message_files(DIRECTORY msg
   FILES
   Backchannel.msg
+  BackchannelProbability.msg
 )
 
 generate_messages(DEPENDENCIES

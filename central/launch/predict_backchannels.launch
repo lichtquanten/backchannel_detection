@@ -1,0 +1,19 @@
+<launch>
+	<node
+		pkg="model"
+		type="run_model.py"
+		name="run_model"
+		output="screen"
+	>
+		<param name="model_path" value="/home/sean/link-annotations-features/log.pickle" />
+		<param name="scaler_path" value="/home/sean/link-annotations-features/scaler.joblib" />
+	</node>
+	<node
+		pkg="model"
+		type="synthesize.py"
+		name="synthesize"
+		output="screen"
+	>
+		<param name="threshold" value="0.9" />
+	</node>
+</launch>

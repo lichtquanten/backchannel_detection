@@ -1,14 +1,18 @@
 from audio_io.utils import width_to_dtype
 from features import *
-from grouper import Aligner, Combiner, Counter, History, Window
+from grouper import Aligner, Combiner, Counter, History, Neighborhood, Window
 import rospy
 from scipy import stats
 
 FEATURE_LIST = [
     'all_speech',
+    'all_speech_weak',
     'contains_speech',
+    'contains_speech_weak',
     'speech_duration',
+    'speech_weak_duration',
     'time_since_speech',
+    'time_since_speech_weak',
     'mean_relative_pitch',
     'low_pitch_duration',
     'mean_relative_pitch_slope',
@@ -38,16 +42,22 @@ def compute_audio_features(
     is_speech_block_length = int(sample_rate * 0.02)
     is_speech_block_duration = get_duration(is_speech_block_length / float(sample_rate))
     speech_blocks = BlockArrLike(is_speech_block_length * num_channels, np.array([], dtype), np.append)
-    is_speech = Is_Speech(sample_rate)
+    is_speech = Is_Speech(sample_rate, ratio=0.6, aggressiveness=3)
+    def is_valid(nbhd):
+        return sum(nbhd) / float(len(nbhd)) > 0.4
+    is_speech_weak = Neighborhood(is_valid, 30)
 
     # Speech counter
     is_speech_counter = Counter(lambda x: x)
+    is_speech_weak_counter = Counter(lambda x: x)
     is_not_speech_counter = Counter(lambda x: not x)
+    is_not_speech_weak_counter = Counter(lambda x: not x)
 
     # Create a generator of audio that is speech
     is_speech_audio_aligner = Aligner(['is_speech', 'audio'])
     def speech():
         for bundle, start, end in is_speech_audio_aligner:
+            is_speech_weak.put(bundle['is_speech'], start, end)
             if bundle['is_speech']:
                 yield bundle['audio'], start, end
 
@@ -66,13 +76,17 @@ def compute_audio_features(
     energy_block_duration = get_duration(energy_block_length) / float(sample_rate)
     energy_blocks = BlockArrLike(energy_block_length, np.array([], dtype), np.append)
     energy_calc = Energy()
+    # relative_energy_short = Relative(int(10.0 / energy_block_length * sample_rate), 1)
     relative_energy = Relative(int(100.0 / energy_block_length * sample_rate), 1)
     rel_energy_history = History(int(0.7 / energy_block_length * sample_rate))
 
     # Create window objects for each feature
     is_speech_windows = Window(start_time, window_duration)
+    is_speech_weak_windows = Window(start_time, window_duration)
     is_speech_counter_windows = Window(start_time, window_duration)
+    is_speech_weak_counter_windows = Window(start_time, window_duration)
     is_not_speech_counter_windows = Window(start_time, window_duration)
+    is_not_speech_weak_counter_windows = Window(start_time, window_duration)
     rel_pitch_windows = Window(start_time, window_duration)
     low_rel_pitch_counter_windows = Window(start_time, window_duration)
     rel_pitch_slope_windows = Window(start_time, window_duration)
@@ -110,12 +124,24 @@ def compute_audio_features(
             is_not_speech_counter.put(datum, start, end)
             # # Send to aligner
             is_speech_audio_aligner.put('is_speech', datum, start, end)
+            is_speech_weak.put(datum, start, end)
+
+        for is_sp, start, end in is_speech_weak:
+            is_speech_weak_windows.put(is_sp, start, end)
+            is_speech_weak_counter.put(is_sp, start, end)
+            is_not_speech_weak_counter.put(is_sp, start, end)
 
         for count, start, end in is_speech_counter:
             is_speech_counter_windows.put(count, start, end)
 
+        for count, start, end in is_speech_weak_counter:
+            is_speech_weak_counter_windows.put(count, start, end)
+
         for count, start, end in is_not_speech_counter:
             is_not_speech_counter_windows.put(count, start, end)
+
+        for count, start, end in is_not_speech_weak_counter:
+            is_not_speech_weak_counter_windows.put(count, start, end)
 
         for audio, start, end in speech():
             pitch_blocks.put(audio, start, end)
@@ -178,6 +204,17 @@ def compute_audio_features(
                         rospy.Duration(0), start, end
                     )
 
+        for window, start, end in is_speech_weak_windows:
+            contains_speech = len(window) > 0 and any(window)
+            combiner.put(
+                'contains_speech_weak',
+                contains_speech, start, end
+            )
+            combiner.put(
+                'all_speech_weak',
+                len(window) > 0 and all(window), start, end
+            )
+
         for window, start, end in is_speech_counter_windows:
             m = is_speech_block_duration * max(window) if window else rospy.Duration(0)
             combiner.put(
@@ -186,10 +223,27 @@ def compute_audio_features(
                 start, end
             )
 
+        for window, start, end in is_speech_weak_counter_windows:
+            m = is_speech_block_duration * max(window) if window else rospy.Duration(0)
+            combiner.put(
+                'speech_weak_duration',
+                m,
+                start, end
+            )
+
         for window, start, end in is_not_speech_counter_windows:
             m = is_speech_block_duration * max(window) if window else rospy.Duration(0)
             combiner.put(
                 'time_since_speech',
+                m,
+                start, end
+            )
+
+
+        for window, start, end in is_not_speech_weak_counter_windows:
+            m = is_speech_block_duration * max(window) if window else rospy.Duration(0)
+            combiner.put(
+                'time_since_speech_weak',
                 m,
                 start, end
             )

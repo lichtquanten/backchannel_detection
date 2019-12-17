@@ -1,8 +1,12 @@
 std_msgs/Header header
 bool all_speech
+bool all_speech_weak
 bool contains_speech
+bool contains_speech_weak
 duration speech_duration
+duration speech_weak_duration
 duration time_since_speech
+duration time_since_speech_weak
 float64 mean_relative_pitch
 duration low_pitch_duration
 float64 mean_relative_pitch_slope
